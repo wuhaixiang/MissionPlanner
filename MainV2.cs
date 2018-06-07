@@ -1375,6 +1375,15 @@ namespace MissionPlanner
         {
             bool skipconnectcheck = false;
             log.Info("We are connecting to " + portname + " " + baud );
+            if (Settings.Instance["service_ip"] == null)
+            {
+                CustomMessageBox.Show("未设置服务器IP地址!");
+            }
+            else
+            {
+                CustomMessageBox.Show("服务器IP地址："+ Settings.Instance["service_ip"]);
+            }
+            comPort.CloudStream = new ServiceTCPClient(Settings.Instance["service_ip"], Settings.Instance["service_port"]);
             switch (portname)
             {
                 case "preset":
@@ -1517,7 +1526,6 @@ namespace MissionPlanner
 
                 // do the connect
                 comPort.Open(false, skipconnectcheck);
-
                 if (!comPort.BaseStream.IsOpen)
                 {
                     log.Info("comport is closed. existing connect");
@@ -1691,6 +1699,15 @@ namespace MissionPlanner
 
                 // set connected icon
                 this.MenuConnect.Image = displayicons.disconnect;
+                try
+                {
+                    comPort.Open_service();
+                    CustomMessageBox.Show("连接到管理服务器成功");
+                }
+                catch
+                {
+                    CustomMessageBox.Show("连接到管理服务器失败！");
+                }
             }
             catch (Exception ex)
             {

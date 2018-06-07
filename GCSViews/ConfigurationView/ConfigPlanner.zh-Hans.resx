@@ -320,4 +320,10 @@
   <data name="BUT_videostart.Text" xml:space="preserve">
     <value>开始</value>
   </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>服务器IP</value>
+  </data>
+  <data name="myButton1.Text" xml:space="preserve">
+    <value>设置服务器</value>
+  </data>
 </root>

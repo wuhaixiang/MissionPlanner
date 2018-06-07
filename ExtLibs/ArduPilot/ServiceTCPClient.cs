@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
 using System.Text;
 using System.IO.Ports;
+using System.Threading;
 using System.Net; // dns, ip address
 using System.Net.Sockets; // tcplistner
 using log4net;
@@ -8,9 +12,9 @@ using System.IO;
 
 namespace MissionPlanner.Comms
 {
-    public class TcpSerial : CommsBase,  ICommsSerial, IDisposable
+    public class ServiceTCPClient : CommsBase,  ICommsSerial, IDisposable
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(TcpSerial));
+        private static readonly ILog log = LogManager.GetLogger(typeof(ServiceTCPClient));
         public TcpClient client = new TcpClient();
         IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
@@ -26,12 +30,12 @@ namespace MissionPlanner.Comms
         public bool RtsEnable { get; set; }
         public Stream BaseStream { get { return client.GetStream(); } }
 
-        public TcpSerial()
+        public ServiceTCPClient(string ipaddress,string port)
         {
             //System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
             //System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-
-            Port = "5760";
+            Ipaddress = ipaddress;
+            Port = port;
             ReadTimeout = 500;
         }
 
@@ -40,6 +44,7 @@ namespace MissionPlanner.Comms
         }
 
         public string Port { get; set; }
+        public string Ipaddress { get; set; }
 
         public int ReadTimeout
         {
@@ -107,36 +112,36 @@ namespace MissionPlanner.Comms
 
                 if (client.Client.Connected)
                 {
-                    log.Warn("tcpserial socket already open");
+                    log.Warn("ServiceTCPClient socket already open");
                     return;
                 }
 
-                string dest = Port;
-                string host = "127.0.0.1";
+                //string dest = Port;
+                string host = Ipaddress;
 
-                dest = OnSettings("TCP_port", dest);
+                //dest = Port;
 
-                host = OnSettings("TCP_host", host);
+                //host = Ipaddress;
 
-                if (!reconnectnoprompt)
-                {
-                    if (inputboxreturn.Cancel == OnInputBoxShow("remote host",
-                            "Enter host name/ip (ensure remote end is already started)", ref host))
-                    {
-                        throw new Exception("Canceled by request");
-                    }
-                    if (inputboxreturn.Cancel == OnInputBoxShow("remote Port", "Enter remote port", ref dest))
-                    {
-                        throw new Exception("Canceled by request");
-                    }
-                }
+                //if (!reconnectnoprompt)
+                //{
+                //    if (inputboxreturn.Cancel == OnInputBoxShow("remote host",
+                //            "Enter host name/ip (ensure remote end is already started)", ref host))
+                //    {
+                //        throw new Exception("Canceled by request");
+                //    }
+                //    if (inputboxreturn.Cancel == OnInputBoxShow("remote Port", "Enter remote port", ref dest))
+                //    {
+                //        throw new Exception("Canceled by request");
+                //    }
+                //}
 
-                Port = dest;
+              //  Port = dest;
 
-                log.InfoFormat("TCP Open {0} {1}", host, Port);
+            //  log.InfoFormat("TCP Open {0} {1}", host, Port);
 
-                OnSettings("TCP_port", Port, true);
-                OnSettings("TCP_host", host, true);
+               // OnSettings("TCP_port", Port, true);
+               // OnSettings("TCP_host", host, true);
 
                 client = new TcpClient(host, int.Parse(Port));
 
@@ -150,7 +155,7 @@ namespace MissionPlanner.Comms
             catch
             {
                 // disable if the first connect fails
-                autoReconnect = false;
+            //    autoReconnect = ture;
                 throw;
             }
             finally
@@ -292,7 +297,7 @@ namespace MissionPlanner.Comms
             VerifyConnected();
             int size = (int)client.Available;
             byte[] crap = new byte[size];
-            log.InfoFormat("TcpSerial DiscardInBuffer {0}",size);
+            log.InfoFormat("ServiceTCPClient DiscardInBuffer {0}", size);
             Read(crap, 0, size);
         }
 

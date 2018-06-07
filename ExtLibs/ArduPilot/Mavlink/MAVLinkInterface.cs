@@ -24,6 +24,9 @@ namespace MissionPlanner
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private ICommsSerial _baseStream;
 
+        private ICommsSerial _serviceStream;
+
+
         public ICommsSerial BaseStream
         {
             get { return _baseStream; }
@@ -52,6 +55,39 @@ namespace MissionPlanner
                     }
                 }
                 _baseStream = value;
+            }
+        }
+        /// <summary>
+        /// 服务器端的数据流
+        /// </summary>
+        public ICommsSerial CloudStream
+        {
+            get { return _serviceStream; }
+            set
+            {
+                // This is called every time user changes the port selection, so we need to make sure we cleanup
+                // any previous objects so we don't leave the cleanup of system resources to the garbage collector.
+                if (_serviceStream != null)
+                {
+                    try
+                    {
+                        if (_serviceStream.IsOpen)
+                        {
+                            _serviceStream.Close();
+                        }
+                    }
+                    catch { }
+                    IDisposable dsp = _serviceStream as IDisposable;
+                    if (dsp != null)
+                    {
+                        try
+                        {
+                            dsp.Dispose();
+                        }
+                        catch { }
+                    }
+                }
+                _serviceStream = value;
             }
         }
 
@@ -301,6 +337,16 @@ namespace MissionPlanner
 
             try
             {
+                if (CloudStream.IsOpen)
+                    CloudStream.Close();
+            }
+            catch
+            {
+            }
+
+
+            try
+            {
                 if (CommsClose != null)
                     CommsClose(this, null);
             }
@@ -316,6 +362,12 @@ namespace MissionPlanner
         public void Open()
         {
             Open(false);
+        }
+        public void Open_service()
+        {
+            if (CloudStream.IsOpen)
+                return;
+            CloudStream.Open();
         }
 
         public void Open(bool getparams,  bool skipconnectedcheck = false)
