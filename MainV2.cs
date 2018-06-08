@@ -2625,6 +2625,18 @@ namespace MissionPlanner
                         // enumerate each link
                         foreach (var port in Comports)
                         {
+                            if (port.CloudStream.IsOpen)
+                            {
+                                port.update_pos_to_cloud();
+                                try
+                                {
+
+                                    string ack = port.read_service();
+                                    Console.WriteLine("read from cloud:" + ack);
+                                }
+                                catch
+                                { }
+                            }
                             if (!port.BaseStream.IsOpen)
                                 continue;
 

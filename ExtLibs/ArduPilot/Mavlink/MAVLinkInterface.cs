@@ -16,6 +16,7 @@ using MissionPlanner.Comms;
 using MissionPlanner.Mavlink;
 using MissionPlanner.Utilities;
 using Timer = System.Timers.Timer;
+using Newtonsoft.Json;
 
 namespace MissionPlanner
 {
@@ -90,7 +91,60 @@ namespace MissionPlanner
                 _serviceStream = value;
             }
         }
-
+        public class KeyObj_update_pos
+        {
+            public string cmd { get; set; }
+            public string sn { get; set; }
+            public string loc { get; set; }
+            public string high { get; set; }
+            public string speed { get; set; }
+            public string dir { get; set; }
+        }
+        public class KeyObj_get_arm
+        {
+            public string cmd { get; set; }
+            public string sn { get; set; }
+            public string loc { get; set; }
+        }
+        public class KeyObj_update_pos_ack
+        {
+            public string errcode { get; set; }
+            public string errmsg { get; set; }
+            public string ctrcode { get; set; }
+            public string ctrseq { get; set; }
+            public string warnmsg { get; set; }
+        }
+        public class KeyObj_get_arm_ack
+        {
+            public string errcode { get; set; }
+            public string errmsg { get; set; }
+            public string allow { get; set; }
+            public string message { get; set; }
+        }
+        public class KeyObj_cmd_get
+        {
+            public string cmd { get; set; }
+            public string sn { get; set; }
+            public string ctrseq { get; set; }
+        }
+        public class KeyObj_cmd_get_ack
+        {
+            public string errcode { get; set; }
+            public string errmsg { get; set; }
+        }
+        public KeyObj_update_pos_ack update_pos_to_cloud()
+        {
+            KeyObj_update_pos obj = new KeyObj_update_pos();
+            obj.cmd = "02";
+            obj.sn ="mav"+ MAV.sysid.ToString();
+            obj.loc = MAV.cs.Location.Lng.ToString() + ","+MAV.cs.Location.Lat.ToString();
+            obj.high = MAV.cs.alt.ToString();
+            obj.speed = MAV.cs.groundspeed.ToString();
+            obj.dir = MAV.cs.yaw.ToString();
+            string json1 = JsonConvert.SerializeObject(obj);
+            generatePacket_cloud(System.Text.Encoding.Default.GetBytes(json1));
+            return null;
+        }
         public event EventHandler<MAVLinkMessage> OnPacketReceived;
 
         public static event EventHandler<adsb.PointLatLngAltHdg> UpdateADSBPlanePosition;
@@ -209,10 +263,13 @@ namespace MissionPlanner
         /// </summary>
         volatile object objlock = new object();
 
+        volatile object objlock_cloud = new object();
+
         /// <summary>
         /// used for a readlock on readpacket
         /// </summary>
         volatile object readlock = new object();
+        volatile object readlock_cloud = new object();
 
         /// <summary>
         /// mavlink version
@@ -721,7 +778,18 @@ Please check the following
             //uses currently targeted mavs sysid and compid
             generatePacket(messageType, indata, MAV.sysid, MAV.compid);
         }
-
+        //发送数据给服务器
+        void generatePacket_cloud(byte[] data)
+        {
+            if (!CloudStream.IsOpen)
+            {
+                    return;
+            }
+            lock (objlock_cloud)
+            {
+                CloudStream.Write(data, 0, data.Length);
+            }
+        }
         /// <summary>
         /// Generate a Mavlink Packet and write to serial
         /// </summary>
@@ -3271,6 +3339,50 @@ Please check the following
 
         private double t7 = 1.0e7;
 
+        public string read_service()
+        {
+            byte[] buffer = new byte[1024];
+            int count = 0;
+            int length = 0;
+            int readcount = 0;
+            CloudStream.ReadTimeout = 500;
+            DateTime start = DateTime.Now;
+            lock (readlock_cloud)
+            {
+                while (CloudStream.IsOpen)
+                {
+                    try
+                    {
+                        if (readcount > 200)
+                        {
+                            break;
+                        }
+                        readcount++;
+                        DateTime to = DateTime.Now.AddMilliseconds(CloudStream.ReadTimeout);
+                        while (CloudStream.IsOpen && CloudStream.BytesToRead <= 0)
+                        {
+                            if (DateTime.Now > to)
+                            {
+                                throw new TimeoutException("Timeout");
+                            }
+                        }
+                        Thread.Sleep(1);
+                        if (CloudStream.IsOpen)
+                        {
+                            CloudStream.Read(buffer, count,buffer.Length);
+                        }
+                        return buffer.ToString();
+                        }
+                    catch (Exception e)
+                    {
+                        log.Info(" error: " + e.ToString());
+                        break;
+                    }
+                }
+                }
+            return null;
+
+            }
         /// <summary>
         /// Serial Reader to read mavlink packets. POLL method
         /// </summary>

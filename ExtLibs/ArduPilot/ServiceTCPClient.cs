@@ -64,8 +64,8 @@ namespace MissionPlanner.Comms
             get
             {
                 if(client != null && client.Client != null && client.Client.RemoteEndPoint != null)
-                    return "TCP" + ((IPEndPoint)client.Client.RemoteEndPoint).Port;
-                return "TCP" + Port;
+                    return "Service" + ((IPEndPoint)client.Client.RemoteEndPoint).Port;
+                return "Service" + Port;
             }
             set { }
         }
@@ -109,7 +109,7 @@ namespace MissionPlanner.Comms
             try
             {
                 inOpen = true;
-
+               
                 if (client.Client.Connected)
                 {
                     log.Warn("ServiceTCPClient socket already open");
@@ -151,6 +151,7 @@ namespace MissionPlanner.Comms
                 VerifyConnected();
 
                 reconnectnoprompt = true;
+                autoReconnect = true;
             }
             catch
             {
@@ -179,13 +180,13 @@ namespace MissionPlanner.Comms
                     catch { }
 
                     client = new TcpClient();
-                    
-                    var host = OnSettings("TCP_host", "");
-                    var port = int.Parse(OnSettings("TCP_port", ""));
+
+                    string host = Ipaddress;
+                    string  port =Port;
 
                     log.InfoFormat("doAutoReconnect {0} {1}", host,port);
 
-                    var task = client.ConnectAsync(host, port);
+                    var task = client.ConnectAsync(host, int.Parse(Port));
 
                     lastReconnectTime = DateTime.Now.AddSeconds(5);
                 }
@@ -338,6 +339,7 @@ namespace MissionPlanner.Comms
 
         public void Close()
         {
+            autoReconnect = false;
             try
             {
                 if (client.Client != null && client.Client.Connected)
