@@ -264,7 +264,7 @@ namespace MissionPlanner.Comms
             if (data.Length > 0)
                 Read(data, 0, data.Length);
 
-            string line = Encoding.ASCII.GetString(data, 0, data.Length);
+            string line = Encoding.UTF8.GetString(data, 0, data.Length);
 
             return line;
         }

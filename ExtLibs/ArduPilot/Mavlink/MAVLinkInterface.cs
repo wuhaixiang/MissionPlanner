@@ -132,7 +132,26 @@ namespace MissionPlanner
             public string errcode { get; set; }
             public string errmsg { get; set; }
         }
-        public KeyObj_update_pos_ack update_pos_to_cloud()
+        public KeyObj_get_arm_ack cloud_get_armable()
+        {
+            KeyObj_get_arm obj = new KeyObj_get_arm();
+            obj.cmd = "01";
+            obj.sn = "mav" + MAV.sysid.ToString();
+            obj.loc = MAV.cs.Location.Lng.ToString() + "," + MAV.cs.Location.Lat.ToString();
+            string json1 = JsonConvert.SerializeObject(obj);
+            generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
+            string data = read_service();
+            try
+            {
+                Console.WriteLine("Get data form manageService:" + data);
+                KeyObj_get_arm_ack stu2 = JsonConvert.DeserializeObject<KeyObj_get_arm_ack>(data);
+                return stu2;
+            }
+            catch
+            { }
+            return null;
+        }
+        public KeyObj_update_pos_ack cloud_update_pos_to_cloud()
         {
             KeyObj_update_pos obj = new KeyObj_update_pos();
             obj.cmd = "02";
@@ -142,7 +161,19 @@ namespace MissionPlanner
             obj.speed = MAV.cs.groundspeed.ToString();
             obj.dir = MAV.cs.yaw.ToString();
             string json1 = JsonConvert.SerializeObject(obj);
-            generatePacket_cloud(System.Text.Encoding.Default.GetBytes(json1));
+            generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
+            string data = read_service();
+            try
+            {
+                Console.WriteLine("Get data form manageService:" + data);
+                KeyObj_update_pos_ack stu2 = JsonConvert.DeserializeObject<KeyObj_update_pos_ack>(data);
+                return stu2;
+               // KeyObj_cmd_get keyObj_Cmd_Get = new KeyObj_cmd_get();
+            }
+            catch
+            {
+            
+            }
             return null;
         }
         public event EventHandler<MAVLinkMessage> OnPacketReceived;
@@ -3369,9 +3400,8 @@ Please check the following
                         Thread.Sleep(1);
                         if (CloudStream.IsOpen)
                         {
-                            CloudStream.Read(buffer, count,buffer.Length);
+                            return CloudStream.ReadExisting();
                         }
-                        return buffer.ToString();
                         }
                     catch (Exception e)
                     {

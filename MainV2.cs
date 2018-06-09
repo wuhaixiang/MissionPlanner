@@ -1381,7 +1381,7 @@ namespace MissionPlanner
             }
             else
             {
-                CustomMessageBox.Show("服务器IP地址："+ Settings.Instance["service_ip"]);
+                CustomMessageBox.Show("服务器IP地址："+ Settings.Instance["service_ip"]+"/r/n端口号："+ Settings.Instance["service_port"]);
             }
             comPort.CloudStream = new ServiceTCPClient(Settings.Instance["service_ip"], Settings.Instance["service_port"]);
             switch (portname)
@@ -2627,15 +2627,7 @@ namespace MissionPlanner
                         {
                             if (port.CloudStream.IsOpen)
                             {
-                                port.update_pos_to_cloud();
-                                try
-                                {
-
-                                    string ack = port.read_service();
-                                    Console.WriteLine("read from cloud:" + ack);
-                                }
-                                catch
-                                { }
+                                port.cloud_update_pos_to_cloud(); 
                             }
                             if (!port.BaseStream.IsOpen)
                                 continue;

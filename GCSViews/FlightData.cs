@@ -30,6 +30,7 @@ using WebCamService;
 using ZedGraph;
 using LogAnalyzer = MissionPlanner.Utilities.LogAnalyzer;
 using MissionPlanner.Maps;
+using static MissionPlanner.MAVLinkInterface;
 
 // written by michael oborne
 
@@ -3525,15 +3526,46 @@ namespace MissionPlanner.GCSViews
         {
             if (!MainV2.comPort.BaseStream.IsOpen)
                 return;
-
-            // arm the MAV
-            try
+                // arm the MAV
+                try
             {
                 if (MainV2.comPort.MAV.cs.armed)
                     if (CustomMessageBox.Show("Are you sure you want to Disarm?", "Disarm?", MessageBoxButtons.YesNo) !=
                         (int)DialogResult.Yes)
                         return;
-
+                    
+                    {
+                        if (!MainV2.comPort.CloudStream.IsOpen)
+                        {
+                            CustomMessageBox.Show("未连接到监控服务器，请连接到监控服务器后解锁！");
+                           return;
+                        }
+                        KeyObj_get_arm_ack keyObj_Get_Arm_Ack= MainV2.comPort.cloud_get_armable();
+                        if (keyObj_Get_Arm_Ack == null)
+                        {
+                            CustomMessageBox.Show("未收到解锁信号，请联系监控服务商！");
+                            return;
+                        }
+                        if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
+                            keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                        if (keyObj_Get_Arm_Ack == null)
+                        {
+                            CustomMessageBox.Show("未收到解锁信号，请联系监控服务商！");
+                            return;
+                        }
+                        else
+                        {
+                            if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                            {
+                                CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                            }
+                            else
+                            {
+                                CustomMessageBox.Show("禁止解锁无人机:" + keyObj_Get_Arm_Ack.message);
+                                return;
+                            }
+                        }
+                    }
                 bool ans = MainV2.comPort.doARM(!MainV2.comPort.MAV.cs.armed);
                 if (ans == false)
                     CustomMessageBox.Show(Strings.ErrorRejectedByMAV, Strings.ERROR);
