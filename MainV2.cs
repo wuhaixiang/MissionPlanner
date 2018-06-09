@@ -1384,7 +1384,6 @@ namespace MissionPlanner
             {
                 CustomMessageBox.Show("服务器IP地址："+ Settings.Instance["service_ip"]+"/r/n端口号："+ Settings.Instance["service_port"]);
             }
-            comPort.CloudStream = new ServiceTCPClient(Settings.Instance["service_ip"], Settings.Instance["service_port"]);
             switch (portname)
             {
                 case "preset":
@@ -1541,10 +1540,10 @@ namespace MissionPlanner
                     }
                     return;
                 }
-
+              
                 if (getparams)
                     comPort.getParamList();
-
+               
                 _connectionControl.UpdateSysIDS();
 
                 // detect firmware we are conected to.
@@ -1700,6 +1699,7 @@ namespace MissionPlanner
 
                 // set connected icon
                 this.MenuConnect.Image = displayicons.disconnect;
+                comPort.CloudStream = new ServiceTCPClient(Settings.Instance["service_ip"], Settings.Instance["service_port"]);
                 try
                 {
                     comPort.Open_service();
@@ -2341,7 +2341,6 @@ namespace MissionPlanner
         }
 
         ManualResetEvent SerialThreadrunner = new ManualResetEvent(false);
-
         /// <summary>
         /// main serial reader thread
         /// controls
@@ -2664,10 +2663,15 @@ namespace MissionPlanner
                         // enumerate each link
                         foreach (var port in Comports)
                         {
-                            if (port.CloudStream.IsOpen)
+                            //上报每个客户端的数据
+                            try
                             {
-                                port.cloud_update_pos_to_cloud(); 
+                                if (port.CloudStream.IsOpen)
+                                {
+                                    port.cloud_update_pos_to_cloud();
+                                }
                             }
+                            catch { }
                             if (!port.BaseStream.IsOpen)
                                 continue;
 
@@ -2941,7 +2945,12 @@ namespace MissionPlanner
                 Priority = ThreadPriority.AboveNormal
             };
             serialreaderthread.Start();
-
+            //new Thread(cloud_updater)
+            //{
+            //    IsBackground = true,
+            //    Name = "cloud_updater reader",
+            //    Priority = ThreadPriority.AboveNormal
+            //}.Start();
             log.Info("start plugin thread");
             // setup main plugin thread
             pluginthread = new Thread(PluginThread)
