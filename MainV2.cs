@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using MissionPlanner.ArduPilot;
+using static MissionPlanner.MAVLinkInterface;
 
 namespace MissionPlanner
 {
@@ -2567,8 +2568,46 @@ namespace MissionPlanner
                     }
 
                     // get home point on armed status change.
+                    //从其他地方解锁了无人机，比如遥控器或者其他地面站
                     if (armedstatus != MainV2.comPort.MAV.cs.armed && comPort.BaseStream.IsOpen)
                     {
+                        if (MainV2.comPort.MAV.cs.armed)
+                        {
+
+                            if (!MainV2.comPort.CloudStream.IsOpen)
+                            {
+                                MainV2.comPort.doARM(false);
+                                 CustomMessageBox.Show(Strings.ERROR, "未连接到监控服务器，请连接到监控服务器后解锁！");
+                            }
+                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            if (keyObj_Get_Arm_Ack == null)
+                            {
+                                MainV2.comPort.doARM(false);
+                                CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
+                                return;
+                            }
+                            if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
+                                keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            if (keyObj_Get_Arm_Ack == null)
+                            {
+                                MainV2.comPort.doARM(false);
+                                CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
+                                return;
+                            }
+                            else
+                            {
+                                if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                {
+                                 //   CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                                }
+                                else
+                                {
+                                    MainV2.comPort.doARM(false);
+                                    CustomMessageBox.Show(Strings.ERROR, "禁止解锁无人机:" + keyObj_Get_Arm_Ack.message);
+                                    return;
+                                }
+                            }
+                        }
                         armedstatus = MainV2.comPort.MAV.cs.armed;
                         // status just changed to armed
                         if (MainV2.comPort.MAV.cs.armed == true && MainV2.comPort.MAV.aptype != MAVLink.MAV_TYPE.GIMBAL)
