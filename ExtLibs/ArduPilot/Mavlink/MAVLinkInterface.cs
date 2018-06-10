@@ -99,6 +99,8 @@ namespace MissionPlanner
             public string high { get; set; }
             public string speed { get; set; }
             public string dir { get; set; }
+            public string mode { get; set; }
+            public string armed { get; set; }
         }
         public class KeyObj_get_arm
         {
@@ -160,6 +162,8 @@ namespace MissionPlanner
             obj.high = MAV.cs.alt.ToString();
             obj.speed = MAV.cs.groundspeed.ToString();
             obj.dir = MAV.cs.yaw.ToString();
+            obj.armed = MAV.cs.armed.ToString();
+            obj.mode = MAV.cs.mode.ToString();
             string json1 = JsonConvert.SerializeObject(obj);
             generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
             string data = read_service();

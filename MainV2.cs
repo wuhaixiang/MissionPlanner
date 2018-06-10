@@ -1926,6 +1926,7 @@ namespace MissionPlanner
             log.Info("closing serialthread");
 
             serialThread = false;
+            cloud_thread = false;
 
             if (serialreaderthread != null)
                 serialreaderthread.Join();
@@ -2339,7 +2340,98 @@ namespace MissionPlanner
 
             return;
         }
+        bool cloud_thread = false;
+        private void cloud_updater()
+        {
+            if (cloud_thread == true)
+                return;
+            cloud_thread = true;
+            bool armedstatus = false;
+            while (cloud_thread)
+                {
+                foreach (var port in Comports)
+                {
+                    //上报每个客户端的数据
+                    try
+                    {
+                        if (port.CloudStream.IsOpen)
+                        {
+                            KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud();
+                            if (keyObj_Update_Pos_Ack != null)
+                            {
+                                if(port.MAV.cs.armed)
+                                switch (keyObj_Update_Pos_Ack.ctrcode)
+                                {
+                                    case "0":
+                                        break;
+                                    case "1":
+                                        if (!port.MAV.cs.mode.ToLower().Equals("land"))
+                                        {
+                                            Console.WriteLine("服务器发回数据，要求降落!");
+                                           port.setMode(port.MAV.sysid, port.MAV.compid, "LAND");
+                                            CustomMessageBox.Show("提示:"+keyObj_Update_Pos_Ack .warnmsg+ "服务器发回数据，要求降落!", Strings.ERROR);
+                                        }
+                                        break;
+                                    case "2":
+                                        if (!port.MAV.cs.mode.ToLower().Equals("rtl"))
+                                        {
+                                            Console.WriteLine("服务器发回数据，要求返航!");
+                                            port.setMode(port.MAV.sysid, port.MAV.compid, "RTL");
+                                            CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求返航!", Strings.ERROR);
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    { }
+                    if (armedstatus != MainV2.comPort.MAV.cs.armed && comPort.BaseStream.IsOpen)
+                    {
+                        if (MainV2.comPort.MAV.cs.armed)
+                        {
 
+                            if (!MainV2.comPort.CloudStream.IsOpen)
+                            {
+                                MainV2.comPort.doARM(false);
+                                CustomMessageBox.Show("未连接到监控服务器，请连接到监控服务器后解锁！", Strings.ERROR);
+                            }
+                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            if (keyObj_Get_Arm_Ack == null)
+                            {
+                                MainV2.comPort.doARM(false);
+                                CustomMessageBox.Show("未收到解锁信号，请联系监控服务商！", Strings.ERROR);
+                             
+                            }
+                            if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
+                                keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            if (keyObj_Get_Arm_Ack == null)
+                            {
+                                MainV2.comPort.doARM(false);
+                                CustomMessageBox.Show( "未收到解锁信号，请联系监控服务商！", Strings.ERROR);
+                             
+                            }
+                            else
+                            {
+                                if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                {
+                                    //   CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                                }
+                                else
+                                {
+                                    MainV2.comPort.doARM(false);
+                                    CustomMessageBox.Show("禁止解锁无人机: " + keyObj_Get_Arm_Ack.message, Strings.ERROR);
+                             
+                                }
+                            }
+                        }
+                        armedstatus = MainV2.comPort.MAV.cs.armed;
+                    }
+                        Thread.Sleep(1000);
+                    }
+            }
+
+        }
         ManualResetEvent SerialThreadrunner = new ManualResetEvent(false);
         /// <summary>
         /// main serial reader thread
@@ -2364,6 +2456,7 @@ namespace MissionPlanner
             int altwarningmax = 0;
 
             bool armedstatus = false;
+        
 
             string lastmessagehigh = "";
 
@@ -2570,265 +2663,286 @@ namespace MissionPlanner
                     //从其他地方解锁了无人机，比如遥控器或者其他地面站
                     if (armedstatus != MainV2.comPort.MAV.cs.armed && comPort.BaseStream.IsOpen)
                     {
-                        if (MainV2.comPort.MAV.cs.armed)
-                        {
+                        //if (MainV2.comPort.MAV.cs.armed)
+                        //{
 
-                            if (!MainV2.comPort.CloudStream.IsOpen)
+                            //    if (!MainV2.comPort.CloudStream.IsOpen)
+                            //    {
+                            //        MainV2.comPort.doARM(false);
+                            //         CustomMessageBox.Show(Strings.ERROR, "未连接到监控服务器，请连接到监控服务器后解锁！");
+                            //    }
+                            //    KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            //    if (keyObj_Get_Arm_Ack == null)
+                            //    {
+                            //        MainV2.comPort.doARM(false);
+                            //        CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
+                            //        return;
+                            //    }
+                            //    if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
+                            //        keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            //    if (keyObj_Get_Arm_Ack == null)
+                            //    {
+                            //        MainV2.comPort.doARM(false);
+                            //        CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
+                            //        return;
+                            //    }
+                            //    else
+                            //    {
+                            //        if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                            //        {
+                            //         //   CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                            //        }
+                            //        else
+                            //        {
+                            //            MainV2.comPort.doARM(false);
+                            //            CustomMessageBox.Show(Strings.ERROR, "禁止解锁无人机:" + keyObj_Get_Arm_Ack.message);
+                            //            return;
+                            //        }
+                            //    }
+                            //}
+                            armedstatus = MainV2.comPort.MAV.cs.armed;
+                            // status just changed to armed
+                            if (MainV2.comPort.MAV.cs.armed == true && MainV2.comPort.MAV.aptype != MAVLink.MAV_TYPE.GIMBAL)
                             {
-                                MainV2.comPort.doARM(false);
-                                 CustomMessageBox.Show(Strings.ERROR, "未连接到监控服务器，请连接到监控服务器后解锁！");
-                            }
-                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
-                            if (keyObj_Get_Arm_Ack == null)
-                            {
-                                MainV2.comPort.doARM(false);
-                                CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
-                                return;
-                            }
-                            if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
-                                keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
-                            if (keyObj_Get_Arm_Ack == null)
-                            {
-                                MainV2.comPort.doARM(false);
-                                CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
-                                return;
-                            }
-                            else
-                            {
-                                if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                System.Threading.ThreadPool.QueueUserWorkItem(state =>
                                 {
-                                 //   CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
-                                }
-                                else
-                                {
-                                    MainV2.comPort.doARM(false);
-                                    CustomMessageBox.Show(Strings.ERROR, "禁止解锁无人机:" + keyObj_Get_Arm_Ack.message);
-                                    return;
-                                }
-                            }
-                        }
-                        armedstatus = MainV2.comPort.MAV.cs.armed;
-                        // status just changed to armed
-                        if (MainV2.comPort.MAV.cs.armed == true && MainV2.comPort.MAV.aptype != MAVLink.MAV_TYPE.GIMBAL)
-                        {
-                            System.Threading.ThreadPool.QueueUserWorkItem(state =>
-                            {
-                                try
-                                {
-                                    MainV2.comPort.MAV.cs.HomeLocation = new PointLatLngAlt(MainV2.comPort.getWP(0));
-                                    if (MyView.current != null && MyView.current.Name == "FlightPlanner")
-                                    {
-                                        // update home if we are on flight data tab
-                                        this.BeginInvoke((Action) delegate { FlightPlanner.updateHome(); });
-                                    }
-
-                                }
-                                catch
-                                {
-                                    // dont hang this loop
-                                    this.BeginInvoke(
-                                        (Action)
-                                            delegate
-                                            {
-                                                CustomMessageBox.Show("Failed to update home location (" +
-                                                                      MainV2.comPort.MAV.sysid + ")");
-                                            });
-                                }
-                            });
-                        }
-
-                        if (speechEnable && speechEngine != null)
-                        {
-                            if (Settings.Instance.GetBoolean("speecharmenabled"))
-                            {
-                                string speech = armedstatus ? Settings.Instance["speecharm"] : Settings.Instance["speechdisarm"];
-                                if (!string.IsNullOrEmpty(speech))
-                                {
-                                    MainV2.speechEngine.SpeakAsync(ArduPilot.Common.speechConversion(comPort.MAV, speech));
-                                }
-                            }
-                        }
-                    }
-
-                    // send a hb every seconds from gcs to ap
-                    if (heatbeatSend.Second != DateTime.Now.Second)
-                    {
-                        MAVLink.mavlink_heartbeat_t htb = new MAVLink.mavlink_heartbeat_t()
-                        {
-                            type = (byte) MAVLink.MAV_TYPE.GCS,
-                            autopilot = (byte) MAVLink.MAV_AUTOPILOT.INVALID,
-                            mavlink_version = 3 // MAVLink.MAVLINK_VERSION
-                        };
-
-                        // enumerate each link
-                        foreach (var port in Comports)
-                        {
-                            //上报每个客户端的数据
-                            try
-                            {
-                                if (port.CloudStream.IsOpen)
-                                {
-                                    port.cloud_update_pos_to_cloud();
-                                }
-                            }
-                            catch { }
-                            if (!port.BaseStream.IsOpen)
-                                continue;
-
-                            // poll for params at heartbeat interval - primary mav on this port only
-                            if (!port.giveComport)
-                            {
-                                try
-                                {
-                                    // poll only when not armed
-                                    if (!port.MAV.cs.armed)
-                                    {
-                                        port.getParamPoll();
-                                        port.getParamPoll();
-                                    }
-                                }
-                                catch
-                                {
-                                }
-                            }
-
-                            // there are 3 hb types we can send, mavlink1, mavlink2 signed and unsigned
-                            bool sentsigned = false;
-                            bool sentmavlink1 = false;
-                            bool sentmavlink2 = false;
-
-                            // enumerate each mav
-                            foreach (var MAV in port.MAVlist)
-                            {
-                                try
-                                {
-                                    // poll for version if we dont have it - every mav every port
-                                    if (!MAV.cs.armed && (DateTime.Now.Second % 20) == 0 && MAV.cs.version < new Version(0, 1))
-                                        port.getVersion(MAV.sysid, MAV.compid, false);
-
-                                    // are we talking to a mavlink2 device
-                                    if (MAV.mavlinkv2)
-                                    {
-                                        // is signing enabled
-                                        if (MAV.signing)
-                                        {
-                                            // check if we have already sent
-                                            if (sentsigned)
-                                                continue;
-                                            sentsigned = true;
-                                        }
-                                        else
-                                        {
-                                            // check if we have already sent
-                                            if (sentmavlink2)
-                                                continue;
-                                            sentmavlink2 = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // check if we have already sent
-                                        if (sentmavlink1)
-                                            continue;
-                                        sentmavlink1 = true;
-                                    }
-
-                                    port.sendPacket(htb, MAV.sysid, MAV.compid);
-                                }
-                                catch (Exception ex)
-                                {
-                                    log.Error(ex);
-                                    // close the bad port
                                     try
                                     {
-                                        port.Close();
+                                        MainV2.comPort.MAV.cs.HomeLocation = new PointLatLngAlt(MainV2.comPort.getWP(0));
+                                        if (MyView.current != null && MyView.current.Name == "FlightPlanner")
+                                        {
+                                        // update home if we are on flight data tab
+                                        this.BeginInvoke((Action)delegate { FlightPlanner.updateHome(); });
+                                        }
+
+                                    }
+                                    catch
+                                    {
+                                    // dont hang this loop
+                                    this.BeginInvoke(
+                                            (Action)
+                                                delegate
+                                                {
+                                                    CustomMessageBox.Show("Failed to update home location (" +
+                                                                          MainV2.comPort.MAV.sysid + ")");
+                                                });
+                                    }
+                                });
+                            }
+
+                            if (speechEnable && speechEngine != null)
+                            {
+                                if (Settings.Instance.GetBoolean("speecharmenabled"))
+                                {
+                                    string speech = armedstatus ? Settings.Instance["speecharm"] : Settings.Instance["speechdisarm"];
+                                    if (!string.IsNullOrEmpty(speech))
+                                    {
+                                        MainV2.speechEngine.SpeakAsync(ArduPilot.Common.speechConversion(comPort.MAV, speech));
+                                    }
+                                }
+                            }
+                        }
+
+                        // send a hb every seconds from gcs to ap
+                        if (heatbeatSend.Second != DateTime.Now.Second)
+                        {
+                            MAVLink.mavlink_heartbeat_t htb = new MAVLink.mavlink_heartbeat_t()
+                            {
+                                type = (byte)MAVLink.MAV_TYPE.GCS,
+                                autopilot = (byte)MAVLink.MAV_AUTOPILOT.INVALID,
+                                mavlink_version = 3 // MAVLink.MAVLINK_VERSION
+                            };
+
+                            // enumerate each link
+                            foreach (var port in Comports)
+                            {
+                                ////上报每个客户端的数据
+                                //try
+                                //{
+                                //    if (port.CloudStream.IsOpen)
+                                //    {
+                                //        KeyObj_update_pos_ack keyObj_Update_Pos_Ack= port.cloud_update_pos_to_cloud();
+                                //        if (keyObj_Update_Pos_Ack != null)
+                                //        {
+                                //            switch (keyObj_Update_Pos_Ack.ctrcode)
+                                //            {
+                                //                case "0":
+                                //                    break;
+                                //                case "1":
+                                //                    if (!port.MAV.cs.mode.ToLower().Equals("land"))
+                                //                    {
+                                //                        Console.WriteLine("服务器发回数据，要求降落!");
+                                //                    }
+                                //                        break;
+                                //                case "2":
+                                //                    if (!port.MAV.cs.mode.ToLower().Equals("rtl"))
+                                //                    {
+                                //                        Console.WriteLine("服务器发回数据，要求返航!");
+                                //                    }
+                                //                    break;
+                                //            }
+                                //        }
+                                //    }
+                                //}
+                                //catch { }
+                                if (!port.BaseStream.IsOpen)
+                                    continue;
+
+                                // poll for params at heartbeat interval - primary mav on this port only
+                                if (!port.giveComport)
+                                {
+                                    try
+                                    {
+                                        // poll only when not armed
+                                        if (!port.MAV.cs.armed)
+                                        {
+                                            port.getParamPoll();
+                                            port.getParamPoll();
+                                        }
                                     }
                                     catch
                                     {
                                     }
-                                    // refresh the screen if needed
-                                    if (port == MainV2.comPort)
+                                }
+
+                                // there are 3 hb types we can send, mavlink1, mavlink2 signed and unsigned
+                                bool sentsigned = false;
+                                bool sentmavlink1 = false;
+                                bool sentmavlink2 = false;
+
+                                // enumerate each mav
+                                foreach (var MAV in port.MAVlist)
+                                {
+                                    try
                                     {
-                                        // refresh config window if needed
-                                        if (MyView.current != null)
+                                        // poll for version if we dont have it - every mav every port
+                                        if (!MAV.cs.armed && (DateTime.Now.Second % 20) == 0 && MAV.cs.version < new Version(0, 1))
+                                            port.getVersion(MAV.sysid, MAV.compid, false);
+
+                                        // are we talking to a mavlink2 device
+                                        if (MAV.mavlinkv2)
                                         {
-                                            this.BeginInvoke((MethodInvoker) delegate()
+                                            // is signing enabled
+                                            if (MAV.signing)
                                             {
-                                                if (MyView.current.Name == "HWConfig")
-                                                    MyView.ShowScreen("HWConfig");
-                                                if (MyView.current.Name == "SWConfig")
-                                                    MyView.ShowScreen("SWConfig");
-                                            });
+                                                // check if we have already sent
+                                                if (sentsigned)
+                                                    continue;
+                                                sentsigned = true;
+                                            }
+                                            else
+                                            {
+                                                // check if we have already sent
+                                                if (sentmavlink2)
+                                                    continue;
+                                                sentmavlink2 = true;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // check if we have already sent
+                                            if (sentmavlink1)
+                                                continue;
+                                            sentmavlink1 = true;
+                                        }
+
+                                        port.sendPacket(htb, MAV.sysid, MAV.compid);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        log.Error(ex);
+                                        // close the bad port
+                                        try
+                                        {
+                                            port.Close();
+                                        }
+                                        catch
+                                        {
+                                        }
+                                        // refresh the screen if needed
+                                        if (port == MainV2.comPort)
+                                        {
+                                            // refresh config window if needed
+                                            if (MyView.current != null)
+                                            {
+                                                this.BeginInvoke((MethodInvoker)delegate ()
+                                               {
+                                                   if (MyView.current.Name == "HWConfig")
+                                                       MyView.ShowScreen("HWConfig");
+                                                   if (MyView.current.Name == "SWConfig")
+                                                       MyView.ShowScreen("SWConfig");
+                                               });
+                                            }
                                         }
                                     }
                                 }
                             }
+
+                            heatbeatSend = DateTime.Now;
                         }
 
-                        heatbeatSend = DateTime.Now;
-                    }
-
-                    // if not connected or busy, sleep and loop
-                    if (!comPort.BaseStream.IsOpen || comPort.giveComport == true)
-                    {
-                        if (!comPort.BaseStream.IsOpen)
+                        // if not connected or busy, sleep and loop
+                        if (!comPort.BaseStream.IsOpen || comPort.giveComport == true)
                         {
-                            // check if other ports are still open
-                            foreach (var port in Comports)
+                            if (!comPort.BaseStream.IsOpen)
                             {
-                                if (port.BaseStream.IsOpen)
+                                // check if other ports are still open
+                                foreach (var port in Comports)
                                 {
-                                    Console.WriteLine("Main comport shut, swapping to other mav");
-                                    comPort = port;
-                                    break;
+                                    if (port.BaseStream.IsOpen)
+                                    {
+                                        Console.WriteLine("Main comport shut, swapping to other mav");
+                                        comPort = port;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            System.Threading.Thread.Sleep(100);
+                        }
+
+                        // read the interfaces
+                        foreach (var port in Comports.ToArray())
+                        {
+                            if (!port.BaseStream.IsOpen)
+                            {
+                                // skip primary interface
+                                if (port == comPort)
+                                    continue;
+
+                                // modify array and drop out
+                                Comports.Remove(port);
+                                port.Dispose();
+                                break;
+                            }
+
+                            while (port.BaseStream.IsOpen && port.BaseStream.BytesToRead > minbytes &&
+                                   port.giveComport == false && serialThread)
+                            {
+                                try
+                                {
+                                    port.readPacket();
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.Error(ex);
+                                }
+                            }
+                            // update currentstate of sysids on the port
+                            foreach (var MAV in port.MAVlist)
+                            {
+                                try
+                                {
+                                    MAV.cs.UpdateCurrentSettings(null, false, port, MAV);
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.Error(ex);
                                 }
                             }
                         }
-
-                        System.Threading.Thread.Sleep(100);
                     }
 
-                    // read the interfaces
-                    foreach (var port in Comports.ToArray())
-                    {
-                        if (!port.BaseStream.IsOpen)
-                        {
-                            // skip primary interface
-                            if (port == comPort)
-                                continue;
-
-                            // modify array and drop out
-                            Comports.Remove(port);
-                            port.Dispose();
-                            break;
-                        }
-
-                        while (port.BaseStream.IsOpen && port.BaseStream.BytesToRead > minbytes &&
-                               port.giveComport == false && serialThread)
-                        {
-                            try
-                            {
-                               port.readPacket();
-                            }
-                            catch (Exception ex)
-                            {
-                                log.Error(ex);
-                            }
-                        }
-                        // update currentstate of sysids on the port
-                        foreach (var MAV in port.MAVlist)
-                        {
-                            try
-                            {
-                                MAV.cs.UpdateCurrentSettings(null, false, port, MAV);
-                            }
-                            catch (Exception ex)
-                            {
-                                log.Error(ex);
-                            }
-                        }
-                    }
-                }
                 catch (Exception e)
                 {
                     Tracking.AddException(e);
@@ -2945,12 +3059,12 @@ namespace MissionPlanner
                 Priority = ThreadPriority.AboveNormal
             };
             serialreaderthread.Start();
-            //new Thread(cloud_updater)
-            //{
-            //    IsBackground = true,
-            //    Name = "cloud_updater reader",
-            //    Priority = ThreadPriority.AboveNormal
-            //}.Start();
+            new Thread(cloud_updater)
+            {
+                IsBackground = true,
+                Name = "cloud_updater reader",
+                Priority = ThreadPriority.AboveNormal
+            }.Start();
             log.Info("start plugin thread");
             // setup main plugin thread
             pluginthread = new Thread(PluginThread)
