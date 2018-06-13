@@ -17,6 +17,7 @@ using MissionPlanner.Mavlink;
 using MissionPlanner.Utilities;
 using Timer = System.Timers.Timer;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace MissionPlanner
 {
@@ -27,6 +28,57 @@ namespace MissionPlanner
 
         private ICommsSerial _serviceStream;
 
+        /// <summary>
+        /// POST请求与获取结果
+        /// </summary>
+        public static string HttpPost(string Url, string postDataStr)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+           
+            request.ContentLength = postDataStr.Length;
+            request.Timeout = 600;
+            StreamWriter writer = new StreamWriter(request.GetRequestStream(), Encoding.ASCII);
+            writer.Write(postDataStr);
+            writer.Flush();
+            try
+            {
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                string encoding = response.ContentEncoding;
+                if (encoding == null || encoding.Length < 1)
+                {
+                    encoding = "UTF-8"; //默认编码
+                }
+                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding(encoding));
+                string retString = reader.ReadToEnd();
+                return retString;
+            }
+            catch
+            {
+            }
+            return null;
+
+        }
+        /// <summary>
+        /// GET请求与获取结果
+        /// </summary>
+        public static string HttpGet(string Url, string postDataStr)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : "?") + postDataStr);
+            request.Method = "GET";
+            request.ContentType = "application/json";
+            request.Timeout =600;
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream myResponseStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.UTF8);
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            myResponseStream.Close();
+
+            return retString;
+        }
 
         public ICommsSerial BaseStream
         {
@@ -134,18 +186,17 @@ namespace MissionPlanner
             public string errcode { get; set; }
             public string errmsg { get; set; }
         }
-        public KeyObj_get_arm_ack cloud_get_armable()
+        public KeyObj_get_arm_ack cloud_get_armable(String url)
         {
             KeyObj_get_arm obj = new KeyObj_get_arm();
             obj.cmd = "01";
-            obj.sn = "mav" + MAV.sysid.ToString();
+            obj.sn = "D13347";
             obj.loc = MAV.cs.Location.Lng.ToString() + "," + MAV.cs.Location.Lat.ToString();
-            string json1 = JsonConvert.SerializeObject(obj);
-            generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
-            string data = read_service();
+            string json1 = JsonConvert.SerializeObject(obj);         
+            string data = HttpPost(url,json1);
             try
             {
-                Console.WriteLine("Get data form manageService:" + data);
+                System.Console.WriteLine("Get data form manageService:" + data);
                 KeyObj_get_arm_ack stu2 = JsonConvert.DeserializeObject<KeyObj_get_arm_ack>(data);
                 return stu2;
             }
@@ -153,33 +204,79 @@ namespace MissionPlanner
             { }
             return null;
         }
-        public KeyObj_update_pos_ack cloud_update_pos_to_cloud()
+        //public KeyObj_get_arm_ack cloud_get_armable( )
+        //{
+        //    read_service();
+        //    KeyObj_get_arm obj = new KeyObj_get_arm();
+        //    obj.cmd = "01";
+        //    obj.sn = "D13347";
+        //    obj.loc = MAV.cs.Location.Lng.ToString() + "," + MAV.cs.Location.Lat.ToString();
+        //    string json1 = JsonConvert.SerializeObject(obj);
+        //    generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
+        //    string data = read_service();
+        //    try
+        //    {
+        //        System.Console.WriteLine("Get data form manageService:" + data);
+        //        KeyObj_get_arm_ack stu2 = JsonConvert.DeserializeObject<KeyObj_get_arm_ack>(data);
+        //        return stu2;
+        //    }
+        //    catch
+        //    { }
+        //    return null;
+        //}
+        public KeyObj_update_pos_ack cloud_update_pos_to_cloud(string url)
         {
             KeyObj_update_pos obj = new KeyObj_update_pos();
             obj.cmd = "02";
-            obj.sn ="mav"+ MAV.sysid.ToString();
-            obj.loc = MAV.cs.Location.Lng.ToString() + ","+MAV.cs.Location.Lat.ToString();
+            obj.sn = "D13347";
+            obj.loc = MAV.cs.Location.Lng.ToString() + "," + MAV.cs.Location.Lat.ToString();
             obj.high = MAV.cs.alt.ToString();
             obj.speed = MAV.cs.groundspeed.ToString();
             obj.dir = MAV.cs.yaw.ToString();
             obj.armed = MAV.cs.armed.ToString();
             obj.mode = MAV.cs.mode.ToString();
             string json1 = JsonConvert.SerializeObject(obj);
-            generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
-            string data = read_service();
+            string data = HttpPost(url, json1);
             try
             {
-                Console.WriteLine("Get data form manageService:" + data);
+                System.Console.WriteLine("Get data form manageService:" + data);
                 KeyObj_update_pos_ack stu2 = JsonConvert.DeserializeObject<KeyObj_update_pos_ack>(data);
                 return stu2;
-               // KeyObj_cmd_get keyObj_Cmd_Get = new KeyObj_cmd_get();
+            
             }
             catch
             {
-            
+
             }
             return null;
         }
+        //public KeyObj_update_pos_ack cloud_update_pos_to_cloud()
+        //{
+        //    KeyObj_update_pos obj = new KeyObj_update_pos();
+        //    obj.cmd = "02";
+        //    obj.sn = "D13347";
+        //    obj.loc = MAV.cs.Location.Lng.ToString() + ","+MAV.cs.Location.Lat.ToString();
+        //    obj.high = MAV.cs.alt.ToString();
+        //    obj.speed = MAV.cs.groundspeed.ToString();
+        //    obj.dir = MAV.cs.yaw.ToString();
+        //    obj.armed = MAV.cs.armed.ToString();
+        //    obj.mode = MAV.cs.mode.ToString();
+        //    string json1 = JsonConvert.SerializeObject(obj);
+        //    generatePacket_cloud(System.Text.Encoding.UTF8.GetBytes(json1));
+        //    string data = read_service();
+        //    try
+        //    {
+        //        System.Console.WriteLine("Get data form manageService:" + data);
+        //        KeyObj_update_pos_ack stu2 = JsonConvert.DeserializeObject<KeyObj_update_pos_ack>(data);
+        //        return stu2;
+        //       // KeyObj_cmd_get keyObj_Cmd_Get = new KeyObj_cmd_get();
+        //    }
+        //    catch
+        //    {
+            
+        //    }
+        //    return null;
+        //}
         public event EventHandler<MAVLinkMessage> OnPacketReceived;
 
         public static event EventHandler<adsb.PointLatLngAltHdg> UpdateADSBPlanePosition;
@@ -822,6 +919,7 @@ Please check the following
             }
             lock (objlock_cloud)
             {
+                Console.WriteLine("cloud stream wite" +data.ToString());
                 CloudStream.Write(data, 0, data.Length);
             }
         }
@@ -3376,9 +3474,7 @@ Please check the following
 
         public string read_service()
         {
-            byte[] buffer = new byte[1024];
-            int count = 0;
-            int length = 0;
+            byte[] buffer = new byte[2048];
             int readcount = 0;
             CloudStream.ReadTimeout = 500;
             DateTime start = DateTime.Now;
@@ -3388,7 +3484,7 @@ Please check the following
                 {
                     try
                     {
-                        if (readcount > 200)
+                        if (readcount > 500)
                         {
                             break;
                         }

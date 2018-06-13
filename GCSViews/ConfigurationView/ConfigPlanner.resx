@@ -2297,7 +2297,7 @@
     <value>NoControl</value>
   </data>
   <data name="myButton1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>553, 449</value>
+    <value>596, 451</value>
   </data>
   <data name="myButton1.Size" type="System.Drawing.Size, System.Drawing">
     <value>107, 23</value>
@@ -2354,13 +2354,13 @@
     <value>108, 449</value>
   </data>
   <data name="txt_service_ip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 25</value>
+    <value>477, 25</value>
   </data>
   <data name="txt_service_ip.TabIndex" type="System.Int32, mscorlib">
     <value>122</value>
   </data>
   <data name="txt_service_ip.Text" xml:space="preserve">
-    <value>127.0.0.1</value>
+    <value>http://192.168.1.20:8080/UAVServer/mphttpserver.action</value>
   </data>
   <data name="&gt;&gt;txt_service_ip.Name" xml:space="preserve">
     <value>txt_service_ip</value>
@@ -2381,7 +2381,7 @@
     <value>NoControl</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>394, 454</value>
+    <value>512, 421</value>
   </data>
   <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
     <value>39, 15</value>
@@ -2405,7 +2405,7 @@
     <value>1</value>
   </data>
   <data name="txt_service_port.Location" type="System.Drawing.Point, System.Drawing">
-    <value>450, 449</value>
+    <value>596, 414</value>
   </data>
   <data name="txt_service_port.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 25</value>

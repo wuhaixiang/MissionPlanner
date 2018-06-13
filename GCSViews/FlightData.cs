@@ -3526,32 +3526,33 @@ namespace MissionPlanner.GCSViews
         {
             if (!MainV2.comPort.BaseStream.IsOpen)
                 return;
-                // arm the MAV
-                try
+            // arm the MAV
+            try
             {
                 if (MainV2.comPort.MAV.cs.armed)
+                {
                     if (CustomMessageBox.Show("Are you sure you want to Disarm?", "Disarm?", MessageBoxButtons.YesNo) !=
                         (int)DialogResult.Yes)
                         return;
-                    
-                    {
-                        if (!MainV2.comPort.CloudStream.IsOpen)
-                        {
-                            CustomMessageBox.Show(Strings.ERROR, "未连接到监控服务器，请连接到监控服务器后解锁！");
-                           return;
-                        }
-                        KeyObj_get_arm_ack keyObj_Get_Arm_Ack= MainV2.comPort.cloud_get_armable();
+                }
+
+              else  {
+                    try {
+                        //if (!MainV2.comPort.CloudStream.IsOpen)
+                        //{
+                        //    CustomMessageBox.Show("未连接到监控服务器，请连接到监控服务器后解锁！", Strings.ERROR);
+                        //    return;
+                        //}
+                        KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"]);
                         if (keyObj_Get_Arm_Ack == null)
                         {
-                            CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
+                            CustomMessageBox.Show("未收到解锁信号，请联系监控服务商！", Strings.ERROR);
                             return;
                         }
+
                         if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
-                            keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
-                        if (keyObj_Get_Arm_Ack == null)
                         {
-                            CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系监控服务商！");
-                            return;
+                            CustomMessageBox.Show("禁止解锁无人机:接口出错！" + keyObj_Get_Arm_Ack.errmsg, Strings.ERROR);
                         }
                         else
                         {
@@ -3561,11 +3562,18 @@ namespace MissionPlanner.GCSViews
                             }
                             else
                             {
-                                CustomMessageBox.Show(Strings.ERROR,"禁止解锁无人机:" + keyObj_Get_Arm_Ack.message);
+                                CustomMessageBox.Show("禁止解锁无人机:" + keyObj_Get_Arm_Ack.message, Strings.ERROR);
                                 return;
                             }
                         }
                     }
+                    catch
+                    {
+                        CustomMessageBox.Show("获取解锁信号异常！", Strings.ERROR);
+                        return;
+                    }
+                }
+             
                 bool ans = MainV2.comPort.doARM(!MainV2.comPort.MAV.cs.armed);
                 if (ans == false)
                     CustomMessageBox.Show(Strings.ErrorRejectedByMAV, Strings.ERROR);
@@ -4166,14 +4174,14 @@ namespace MissionPlanner.GCSViews
                                 CustomMessageBox.Show(Strings.ERROR, "未连接到监控服务器，请连接到管理服务器后解锁！");
                                 return;
                             }
-                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"]);
                             if (keyObj_Get_Arm_Ack == null)
                             {
                                 CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系管理服务商！");
                                 return;
                             }
                             if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
-                                keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
+                                keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"]);
                             if (keyObj_Get_Arm_Ack == null)
                             {
                                 CustomMessageBox.Show(Strings.ERROR, "未收到解锁信号，请联系管理服务商！");

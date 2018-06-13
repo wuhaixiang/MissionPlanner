@@ -1376,13 +1376,14 @@ namespace MissionPlanner
         {
             bool skipconnectcheck = false;
             log.Info("We are connecting to " + portname + " " + baud );
-            if (Settings.Instance["service_ip"] == null)
+            if (Settings.Instance["service_url"] == null)
             {
-                CustomMessageBox.Show("未设置服务器IP地址!");
+                CustomMessageBox.Show("未设置服务器UIL地址!");
+                return;
             }
             else
             {
-                CustomMessageBox.Show("服务器IP地址："+ Settings.Instance["service_ip"]+"/r/n端口号："+ Settings.Instance["service_port"]);
+                CustomMessageBox.Show("服务器UIL地址："+ Settings.Instance["service_url"]);
             }
             switch (portname)
             {
@@ -1699,16 +1700,16 @@ namespace MissionPlanner
 
                 // set connected icon
                 this.MenuConnect.Image = displayicons.disconnect;
-                comPort.CloudStream = new ServiceTCPClient(Settings.Instance["service_ip"], Settings.Instance["service_port"]);
-                try
-                {
-                    comPort.Open_service();
-                    CustomMessageBox.Show("连接到管理服务器成功");
-                }
-                catch
-                {
-                    CustomMessageBox.Show("连接到管理服务器失败！");
-                }
+                //comPort.CloudStream = new ServiceTCPClient(Settings.Instance["service_ip"], Settings.Instance["service_port"]);
+                //try
+                //{
+                //    comPort.Open_service();
+                //    CustomMessageBox.Show("连接到管理服务器成功");
+                //}
+                //catch
+                //{
+                //    CustomMessageBox.Show("连接到管理服务器失败！");
+                //}
             }
             catch (Exception ex)
             {
@@ -2354,9 +2355,9 @@ namespace MissionPlanner
                     //上报每个客户端的数据
                     try
                     {
-                        if (port.CloudStream.IsOpen)
+                       // if (port.CloudStream.IsOpen)
                         {
-                            KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud();
+                            KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"]);
                             if (keyObj_Update_Pos_Ack != null)
                             {
                                 if(port.MAV.cs.armed)
@@ -2388,46 +2389,45 @@ namespace MissionPlanner
                     { }
                     if (armedstatus != MainV2.comPort.MAV.cs.armed && comPort.BaseStream.IsOpen)
                     {
+                        Thread.Sleep(1000);
                         if (MainV2.comPort.MAV.cs.armed)
                         {
-
-                            if (!MainV2.comPort.CloudStream.IsOpen)
+                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = null;
+                            try
                             {
-                                MainV2.comPort.doARM(false);
-                                CustomMessageBox.Show("未连接到监控服务器，请连接到监控服务器后解锁！", Strings.ERROR);
-                            }
-                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
-                            if (keyObj_Get_Arm_Ack == null)
-                            {
-                                MainV2.comPort.doARM(false);
-                                CustomMessageBox.Show("未收到解锁信号，请联系监控服务商！", Strings.ERROR);
-                             
-                            }
-                            if (!keyObj_Get_Arm_Ack.errcode.Equals("0"))
-                                keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable();
-                            if (keyObj_Get_Arm_Ack == null)
-                            {
-                                MainV2.comPort.doARM(false);
-                                CustomMessageBox.Show( "未收到解锁信号，请联系监控服务商！", Strings.ERROR);
-                             
-                            }
-                            else
-                            {
-                                if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                 keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"]);
+                                if (keyObj_Get_Arm_Ack == null)
                                 {
-                                    //   CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                                    MainV2.comPort.doARM(false);
+                                    CustomMessageBox.Show("未收到解锁信号，已自动锁定", Strings.ERROR);
+                                   
                                 }
                                 else
                                 {
-                                    MainV2.comPort.doARM(false);
-                                    CustomMessageBox.Show("禁止解锁无人机: " + keyObj_Get_Arm_Ack.message, Strings.ERROR);
-                             
+                                    if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                    {
+                                      //  CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                                    }
+                                    else
+                                    {
+                                        MainV2.comPort.doARM(false);
+                                        CustomMessageBox.Show("禁止解锁无人机:" + keyObj_Get_Arm_Ack.message, Strings.ERROR);
+                                      
+                                    }
                                 }
                             }
+                            catch
+                            {
+                                MainV2.comPort.doARM(false);
+                                CustomMessageBox.Show("获取解锁信号异常,已自动锁定无人机！", Strings.ERROR);
+                                return;
+                            }
+
                         }
+                        Thread.Sleep(1000);
                         armedstatus = MainV2.comPort.MAV.cs.armed;
                     }
-                        Thread.Sleep(1000);
+                        Thread.Sleep(5000);
                     }
             }
 

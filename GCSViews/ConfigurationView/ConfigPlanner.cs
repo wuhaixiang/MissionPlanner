@@ -166,8 +166,8 @@ namespace MissionPlanner.GCSViews.ConfigurationView
                 CMB_speedunits.Text = Settings.Instance["speedunits"].ToString();
             if (Settings.Instance["altunits"] != null)
                 CMB_altunits.Text = Settings.Instance["altunits"].ToString();
-            if (Settings.Instance["service_ip"] != null)
-                txt_service_ip.Text = Settings.Instance["service_ip"].ToString();
+            if (Settings.Instance["service_url"] != null)
+                txt_service_ip.Text = Settings.Instance["service_url"].ToString();
             if (Settings.Instance["service_port"] != null)
                 txt_service_port.Text = Settings.Instance["service_port"].ToString();
             try
@@ -948,9 +948,9 @@ namespace MissionPlanner.GCSViews.ConfigurationView
 
         private void myButton1_Click(object sender, EventArgs e)
         {
-            Settings.Instance["service_ip"] = txt_service_ip.Text;
+            Settings.Instance["service_url"] = txt_service_ip.Text;
             Settings.Instance["service_port"] = txt_service_port.Text;
-            MessageBox.Show("当前服务IP：" + Settings.Instance["service_ip"]+"\r\n"+ "当前服务端口：" + Settings.Instance["service_port"]);
+            MessageBox.Show("当前服务URL：" + Settings.Instance["service_url"] );
         }
     }
 }
