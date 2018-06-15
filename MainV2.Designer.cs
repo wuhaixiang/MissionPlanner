@@ -55,7 +55,6 @@ namespace MissionPlanner
             this.menu = new MissionPlanner.Controls.MyButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.lab_warning = new System.Windows.Forms.Label();
-            this.lab_error = new System.Windows.Forms.Label();
             this.MainMenu.SuspendLayout();
             this.CTX_mainmenu.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -255,22 +254,14 @@ namespace MissionPlanner
             // lab_warning
             // 
             resources.ApplyResources(this.lab_warning, "lab_warning");
-            this.lab_warning.BackColor = System.Drawing.Color.Transparent;
+            this.lab_warning.BackColor = System.Drawing.Color.White;
             this.lab_warning.ForeColor = System.Drawing.Color.Red;
             this.lab_warning.Name = "lab_warning";
-            // 
-            // lab_error
-            // 
-            resources.ApplyResources(this.lab_error, "lab_error");
-            this.lab_error.BackColor = System.Drawing.Color.Transparent;
-            this.lab_error.ForeColor = System.Drawing.Color.Red;
-            this.lab_error.Name = "lab_error";
             // 
             // MainV2
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             resources.ApplyResources(this, "$this");
-            this.Controls.Add(this.lab_error);
             this.Controls.Add(this.lab_warning);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.menu);
@@ -313,6 +304,5 @@ namespace MissionPlanner
         private System.Windows.Forms.ToolStripButton MenuArduPilot;
         private System.Windows.Forms.ToolStripMenuItem connectionListToolStripMenuItem;
         private System.Windows.Forms.Label lab_warning;
-        private System.Windows.Forms.Label lab_error;
     }
 }

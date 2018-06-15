@@ -2357,38 +2357,43 @@ namespace MissionPlanner
             }
             else
             {
-                if (keyObj_Update_Pos_Ack == null)
+                try
                 {
-                    lab_error.Visible = true;
-                    lab_error.Text = "上报数据异常";
-                    return;
-                }
-                  
-                else
-                {
-                    if (!keyObj_Update_Pos_Ack.errcode.Equals("0"))
+                    if (keyObj_Update_Pos_Ack == null)
                     {
-
-                        lab_error.Visible = true;
-                        lab_error.Text =  "提示:" + keyObj_Update_Pos_Ack.errmsg;
+                        //lab_error.Visible = true;
+                        //lab_error.Text = "上报数据异常";
+                        return;
                     }
+
                     else
                     {
-                        lab_error.Visible = false;
-                    }
-                    if (!keyObj_Update_Pos_Ack.warnmsg.Equals(""))
-                    {
+                        //if (!keyObj_Update_Pos_Ack.errcode.Equals("0"))
+                        //{
 
-                        lab_warning.Visible = true;
-                        lab_warning.Text = "警告:" + keyObj_Update_Pos_Ack.warnmsg;
+                        //    lab_error.Visible = true;
+                        //    lab_error.Text =  "提示:" + keyObj_Update_Pos_Ack.errmsg;
+                        //}
+                        //else
+                        //{
+                        //    lab_error.Visible = false;
+                        //}
+                        if (!keyObj_Update_Pos_Ack.warnmsg.Equals(""))
+                        {
+
+                            lab_warning.Visible = true;
+                            lab_warning.Text = "警告:" + keyObj_Update_Pos_Ack.warnmsg;
+                        }
+                        else
+                        {
+                            lab_warning.Visible = false;
+                        }
+
                     }
-                    else
-                    {
-                        lab_warning.Visible = false;
-                    }
-                   
                 }
-            }
+                catch
+                { }
+                }
         }
 
         bool cloud_thread = false;
@@ -2399,97 +2404,105 @@ namespace MissionPlanner
             cloud_thread = true;
             bool armedstatus = false;
             while (cloud_thread)
+            {
+                try
                 {
-                foreach (var port in Comports)
-                {
-               
-                    //上报每个客户端的数据
-                    try
+                    foreach (var port in Comports)
                     {
-                        if (port.BaseStream.IsOpen)
+
+                        //上报每个客户端的数据
+                        try
                         {
-                            keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
-                            ThreadFunction();
-                            if (keyObj_Update_Pos_Ack != null)
+                            if (port.BaseStream.IsOpen)
                             {
+                                keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
+                                ThreadFunction();
+                                if (keyObj_Update_Pos_Ack != null)
+                                {
 
-                                if (port.MAV.cs.armed)
-                                    switch (keyObj_Update_Pos_Ack.ctrcode)
-                                    {
-                                        case "0":
-                                            break;
-                                        case "1":
-                                            if (!port.MAV.cs.mode.ToLower().Equals("land"))
-                                            {
+                                    if (port.MAV.cs.armed)
+                                        switch (keyObj_Update_Pos_Ack.ctrcode)
+                                        {
+                                            case "0":
+                                                break;
+                                            case "1":
+                                                if (!port.MAV.cs.mode.ToLower().Equals("land"))
+                                                {
 
-                                                CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求降落!", Strings.ERROR);
-                                                port.setMode(port.MAV.sysid, port.MAV.compid, "LAND");
-                                            }
-                                            break;
-                                        case "2":
-                                            if (!port.MAV.cs.mode.ToLower().Equals("rtl"))
-                                            {
-                                                CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求返航!", Strings.ERROR);
-                                                port.setMode(port.MAV.sysid, port.MAV.compid, "RTL");
-                                            }
-                                            break;
-                                    }
+                                                    CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求降落!", Strings.ERROR);
+                                                    port.setMode(port.MAV.sysid, port.MAV.compid, "LAND");
+                                                }
+                                                break;
+                                            case "2":
+                                                if (!port.MAV.cs.mode.ToLower().Equals("rtl"))
+                                                {
+                                                    CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求返航!", Strings.ERROR);
+                                                    port.setMode(port.MAV.sysid, port.MAV.compid, "RTL");
+                                                }
+                                                break;
+                                        }
+                                }
+                            }
+                            else
+                            {
+                                keyObj_Update_Pos_Ack = new KeyObj_update_pos_ack();
+                                keyObj_Update_Pos_Ack.errmsg = "";
+                                keyObj_Update_Pos_Ack.warnmsg = "";
+                                keyObj_Update_Pos_Ack.errcode = "0";
+                                ThreadFunction();
                             }
                         }
-                        else
+                        catch
+                        { }
+                        if (armedstatus != MainV2.comPort.MAV.cs.armed && comPort.BaseStream.IsOpen)
                         {
-                            keyObj_Update_Pos_Ack  =new KeyObj_update_pos_ack();
-                            keyObj_Update_Pos_Ack.errmsg = "";
-                            keyObj_Update_Pos_Ack.warnmsg = "";
-                            keyObj_Update_Pos_Ack.errcode = "0";
-                            ThreadFunction();
-                        }
-                    }
-                    catch
-                    { }
-                    if (armedstatus != MainV2.comPort.MAV.cs.armed && comPort.BaseStream.IsOpen)
-                    {
-                        Thread.Sleep(1000);
-                        if (MainV2.comPort.MAV.cs.armed)
-                        {
-                            KeyObj_get_arm_ack keyObj_Get_Arm_Ack = null;
-                            try
+                            Thread.Sleep(1000);
+                            if (MainV2.comPort.MAV.cs.armed)
                             {
-                                 keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
-                                if (keyObj_Get_Arm_Ack == null)
+                                KeyObj_get_arm_ack keyObj_Get_Arm_Ack = null;
+                                try
                                 {
-                                    MainV2.comPort.doARM(false);
-                                    CustomMessageBox.Show("未收到解锁信号，已自动锁定", Strings.ERROR);
-                                   
-                                }
-                                else
-                                {
-                                    if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                    keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
+                                    if (keyObj_Get_Arm_Ack == null)
                                     {
-                                      //  CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                                        MainV2.comPort.doARM(false);
+                                        CustomMessageBox.Show("未收到解锁信号，已自动锁定", Strings.ERROR);
+
                                     }
                                     else
                                     {
-                                        MainV2.comPort.doARM(false);
-                                        CustomMessageBox.Show("禁止解锁无人机:" + keyObj_Get_Arm_Ack.message, Strings.ERROR);
-                                      
+                                        if (keyObj_Get_Arm_Ack.allow.Equals("1"))
+                                        {
+                                            //  CustomMessageBox.Show("收到允许起飞信号:" + keyObj_Get_Arm_Ack.message);
+                                        }
+                                        else
+                                        {
+                                            MainV2.comPort.doARM(false);
+                                            CustomMessageBox.Show("禁止解锁无人机:" + keyObj_Get_Arm_Ack.message, Strings.ERROR);
+
+                                        }
                                     }
                                 }
-                            }
-                            catch
-                            {
-                                MainV2.comPort.doARM(false);
-                                CustomMessageBox.Show("获取解锁信号异常,已自动锁定无人机！", Strings.ERROR);
-                                return;
-                            }
+                                catch
+                                {
+                                    MainV2.comPort.doARM(false);
+                                    CustomMessageBox.Show("获取解锁信号异常,已自动锁定无人机！", Strings.ERROR);
+                                    return;
+                                }
 
+                            }
+                            Thread.Sleep(1000);
+                            armedstatus = MainV2.comPort.MAV.cs.armed;
                         }
                         Thread.Sleep(1000);
-                        armedstatus = MainV2.comPort.MAV.cs.armed;
                     }
-                        Thread.Sleep(3000);
-                    }
-            }
+
+                }
+                catch
+                { }
+                }
+
+           
 
         }
         ManualResetEvent SerialThreadrunner = new ManualResetEvent(false);

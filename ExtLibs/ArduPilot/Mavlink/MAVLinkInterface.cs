@@ -27,18 +27,102 @@ namespace MissionPlanner
         private ICommsSerial _baseStream;
 
         private ICommsSerial _serviceStream;
+        /// <summary>  
+        /// 日志记录，写入txt文件  
+        /// </summary>  
+        /// <param name="msg">记录内容</param>  
+        /// <returns></returns>  
+        public static void AddLog(string msg)
+        {
+            string saveFolder = "Log";//日志文件保存路径
+            string tishiMsg = "";
+            try
+            {
+                string fileName = DateTime.Now.ToString("yyyy-MM-dd");
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, saveFolder);
+                if (Directory.Exists(filePath) == false)
+                {
+                    Directory.CreateDirectory(filePath);
+                }
+                string fileAbstractPath = filePath + "\\" + fileName + ".txt";
+                FileStream fs = new FileStream(fileAbstractPath, FileMode.Append);
+                StreamWriter sw = new StreamWriter(fs);
+                //开始写入     
+                string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                msg ="time:"+ time + ",data:" + msg + System.Environment.NewLine;
 
+                sw.Write(msg);
+                //清空缓冲区               
+                sw.Flush();
+                //关闭流               
+                sw.Close();
+                sw.Dispose();
+                fs.Close();
+                fs.Dispose();
+
+                tishiMsg = "写入日志成功";
+            }
+            catch (Exception ex)
+            {
+                string datetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                tishiMsg = "[" + datetime + "]写入日志出错：" + ex.Message;
+            }
+        }
+        private  static long htttp_sn = 0;
+        /// <summary>  
+        /// 将日志记录换行  
+        /// </summary>  
+        /// <param name="saveFolder">文件保存的目录</param>  
+        /// <param name="rows">换几行</param>  
+        public static void AddLine(int rows)
+        {
+            string saveFolder = "Log";
+            try
+            {
+                string fileName = DateTime.Now.ToString("yyyy-MM-dd");
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, saveFolder);
+                if (Directory.Exists(filePath) == false)
+                {
+                    Directory.CreateDirectory(filePath);
+                }
+                string fileAbstractPath = filePath + "\\" + fileName + ".txt";
+                FileStream fs = new FileStream(fileAbstractPath, FileMode.Append);
+                StreamWriter sw = new StreamWriter(fs);
+                //开始写入    
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                for (int i = 0; i < rows; i++)
+                {
+                    sb.Append(System.Environment.NewLine);
+                }
+                string newline = sb.ToString();
+                sw.Write(newline);
+                //清空缓冲区               
+                sw.Flush();
+                //关闭流               
+                sw.Close();
+                sw.Dispose();
+                fs.Close();
+                fs.Dispose();
+            }
+            catch (Exception ex)
+            {
+                string datetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                string tishiMsg = "[" + datetime + "]写入日志出错：" + ex.Message;
+            }
+        }
         /// <summary>
         /// POST请求与获取结果
         /// </summary>
         public static string HttpPost(string Url, string postDataStr)
         {
+           long sn=  htttp_sn++;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
            
             request.ContentLength = postDataStr.Length;
             request.Timeout = 5000;
+            AddLog("sn:"+sn+"  http request,url:" + Url + "  postdata:" + postDataStr);
             StreamWriter writer = new StreamWriter(request.GetRequestStream(), Encoding.ASCII);
             writer.Write(postDataStr);
             writer.Flush();
@@ -52,11 +136,13 @@ namespace MissionPlanner
                 }
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding(encoding));
                 string retString = reader.ReadToEnd();
+                AddLog("sn:" + sn + "  http response:" + retString);
                 return retString;
             }
             catch
             {
             }
+            AddLog("sn:" + sn + " http no  response!");
             return null;
 
         }
