@@ -168,8 +168,15 @@ namespace MissionPlanner.GCSViews.ConfigurationView
                 CMB_altunits.Text = Settings.Instance["altunits"].ToString();
             if (Settings.Instance["service_url"] != null)
                 txt_service_ip.Text = Settings.Instance["service_url"].ToString();
-            if (Settings.Instance["service_port"] != null)
-                txt_service_port.Text = Settings.Instance["service_port"].ToString();
+            else {
+                Settings.Instance["service_url"] = txt_service_ip.Text;
+            }
+            if (Settings.Instance["UAV_ID"] != null)
+                txt_UAV_ID.Text = Settings.Instance["UAV_ID"].ToString();
+            else
+            {
+                Settings.Instance["UAV_ID"] = txt_UAV_ID.Text;
+            }
             try
             {
                 if (Settings.Instance["video_device"] != null)
@@ -949,8 +956,8 @@ namespace MissionPlanner.GCSViews.ConfigurationView
         private void myButton1_Click(object sender, EventArgs e)
         {
             Settings.Instance["service_url"] = txt_service_ip.Text;
-            Settings.Instance["service_port"] = txt_service_port.Text;
-            MessageBox.Show("当前服务URL：" + Settings.Instance["service_url"] );
+            Settings.Instance["UAV_ID"] = txt_UAV_ID.Text;
+            MessageBox.Show("当前服务URL：" + Settings.Instance["service_url"]+"/r/n" +"当前设备ID"+ Settings.Instance["UAV_ID"]);
         }
     }
 }

@@ -2360,7 +2360,7 @@
     <value>122</value>
   </data>
   <data name="txt_service_ip.Text" xml:space="preserve">
-    <value>http://192.168.1.20:8080/UAVServer/mphttpserver.action</value>
+    <value>http://20575c52j6.iok.la:44822/uavmp/mphttpserver.action</value>
   </data>
   <data name="&gt;&gt;txt_service_ip.Name" xml:space="preserve">
     <value>txt_service_ip</value>
@@ -2384,13 +2384,13 @@
     <value>512, 421</value>
   </data>
   <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>39, 15</value>
+    <value>83, 15</value>
   </data>
   <data name="label8.TabIndex" type="System.Int32, mscorlib">
     <value>123</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-    <value>Port</value>
+    <value>无人机ID：</value>
   </data>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -2404,28 +2404,28 @@
   <data name="&gt;&gt;label8.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="txt_service_port.Location" type="System.Drawing.Point, System.Drawing">
-    <value>596, 414</value>
+  <data name="txt_UAV_ID.Location" type="System.Drawing.Point, System.Drawing">
+    <value>601, 418</value>
   </data>
-  <data name="txt_service_port.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="txt_UAV_ID.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 25</value>
   </data>
-  <data name="txt_service_port.TabIndex" type="System.Int32, mscorlib">
+  <data name="txt_UAV_ID.TabIndex" type="System.Int32, mscorlib">
     <value>124</value>
   </data>
-  <data name="txt_service_port.Text" xml:space="preserve">
-    <value>3840</value>
+  <data name="txt_UAV_ID.Text" xml:space="preserve">
+    <value>D13347</value>
   </data>
-  <data name="&gt;&gt;txt_service_port.Name" xml:space="preserve">
-    <value>txt_service_port</value>
+  <data name="&gt;&gt;txt_UAV_ID.Name" xml:space="preserve">
+    <value>txt_UAV_ID</value>
   </data>
-  <data name="&gt;&gt;txt_service_port.Type" xml:space="preserve">
+  <data name="&gt;&gt;txt_UAV_ID.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;txt_service_port.Parent" xml:space="preserve">
+  <data name="&gt;&gt;txt_UAV_ID.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;txt_service_port.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;txt_UAV_ID.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

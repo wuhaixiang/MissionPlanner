@@ -186,11 +186,11 @@ namespace MissionPlanner
             public string errcode { get; set; }
             public string errmsg { get; set; }
         }
-        public KeyObj_get_arm_ack cloud_get_armable(String url)
+        public KeyObj_get_arm_ack cloud_get_armable(string url,string uav_id)
         {
             KeyObj_get_arm obj = new KeyObj_get_arm();
             obj.cmd = "01";
-            obj.sn = "D13347";
+            obj.sn = uav_id;
             obj.loc = MAV.cs.Location.Lng.ToString() + "," + MAV.cs.Location.Lat.ToString();
             string json1 = JsonConvert.SerializeObject(obj);         
             string data = HttpPost(url,json1);
@@ -224,11 +224,11 @@ namespace MissionPlanner
         //    { }
         //    return null;
         //}
-        public KeyObj_update_pos_ack cloud_update_pos_to_cloud(string url)
+        public KeyObj_update_pos_ack cloud_update_pos_to_cloud(string url, string uav_id)
         {
             KeyObj_update_pos obj = new KeyObj_update_pos();
             obj.cmd = "02";
-            obj.sn = "D13347";
+            obj.sn = uav_id;
             obj.loc = MAV.cs.Location.Lng.ToString() + "," + MAV.cs.Location.Lat.ToString();
             obj.high = MAV.cs.alt.ToString();
             obj.speed = MAV.cs.groundspeed.ToString();

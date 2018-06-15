@@ -106,7 +106,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.txt_service_ip = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.txt_service_port = new System.Windows.Forms.TextBox();
+            this.txt_UAV_ID = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.NUM_tracklength)).BeginInit();
             this.SuspendLayout();
             // 
@@ -701,15 +701,15 @@
             resources.ApplyResources(this.label8, "label8");
             this.label8.Name = "label8";
             // 
-            // txt_service_port
+            // txt_UAV_ID
             // 
-            resources.ApplyResources(this.txt_service_port, "txt_service_port");
-            this.txt_service_port.Name = "txt_service_port";
+            resources.ApplyResources(this.txt_UAV_ID, "txt_UAV_ID");
+            this.txt_UAV_ID.Name = "txt_UAV_ID";
             // 
             // ConfigPlanner
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.Controls.Add(this.txt_service_port);
+            this.Controls.Add(this.txt_UAV_ID);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.txt_service_ip);
             this.Controls.Add(this.label7);
@@ -875,6 +875,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox txt_service_ip;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox txt_service_port;
+        private System.Windows.Forms.TextBox txt_UAV_ID;
     }
 }

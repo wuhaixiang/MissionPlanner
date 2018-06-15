@@ -1381,9 +1381,14 @@ namespace MissionPlanner
                 CustomMessageBox.Show("未设置服务器UIL地址!");
                 return;
             }
+            if (Settings.Instance["UAV_ID"] == null)
+            {
+                CustomMessageBox.Show("未设置无人机ID");
+                return;
+            }
             else
             {
-                CustomMessageBox.Show("服务器UIL地址："+ Settings.Instance["service_url"]);
+                MessageBox.Show("当前服务URL：" + Settings.Instance["service_url"] + "/r/n" + "当前设备ID" + Settings.Instance["UAV_ID"]);
             }
             switch (portname)
             {
@@ -2357,7 +2362,7 @@ namespace MissionPlanner
                     {
                        // if (port.CloudStream.IsOpen)
                         {
-                            KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"]);
+                            KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
                             if (keyObj_Update_Pos_Ack != null)
                             {
                                 if(port.MAV.cs.armed)
@@ -2395,7 +2400,7 @@ namespace MissionPlanner
                             KeyObj_get_arm_ack keyObj_Get_Arm_Ack = null;
                             try
                             {
-                                 keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"]);
+                                 keyObj_Get_Arm_Ack = MainV2.comPort.cloud_get_armable(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
                                 if (keyObj_Get_Arm_Ack == null)
                                 {
                                     MainV2.comPort.doARM(false);
@@ -2427,7 +2432,7 @@ namespace MissionPlanner
                         Thread.Sleep(1000);
                         armedstatus = MainV2.comPort.MAV.cs.armed;
                     }
-                        Thread.Sleep(5000);
+                        Thread.Sleep(2000);
                     }
             }
 
