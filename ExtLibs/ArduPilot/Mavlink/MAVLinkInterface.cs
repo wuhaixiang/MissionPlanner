@@ -35,10 +35,10 @@ namespace MissionPlanner
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
             request.Method = "POST";
-            request.ContentType = "application/json";
+            request.ContentType = "application/x-www-form-urlencoded";
            
             request.ContentLength = postDataStr.Length;
-            request.Timeout = 600;
+            request.Timeout = 5000;
             StreamWriter writer = new StreamWriter(request.GetRequestStream(), Encoding.ASCII);
             writer.Write(postDataStr);
             writer.Flush();
@@ -68,7 +68,7 @@ namespace MissionPlanner
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : "?") + postDataStr);
             request.Method = "GET";
             request.ContentType = "application/json";
-            request.Timeout =600;
+            request.Timeout =5000;
 
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream myResponseStream = response.GetResponseStream();
