@@ -2347,54 +2347,35 @@ namespace MissionPlanner
             return;
         }
         private delegate void FlushClient(); //代理
-        private static KeyObj_update_pos_ack keyObj_Update_Pos_Ack;
-        private void ThreadFunction()
-        {
-            if (this.lab_warning.InvokeRequired)//等待异步
-            {
-                FlushClient fc = new FlushClient(ThreadFunction);
-                this.Invoke(fc); //通过代理调用刷新方法
-            }
-            else
-            {
-                try
-                {
-                    if (keyObj_Update_Pos_Ack == null)
-                    {
-                        //lab_error.Visible = true;
-                        //lab_error.Text = "上报数据异常";
-                        return;
-                    }
+      
+        private delegate void InvokeCallback(Label lab,string msg); //定义回调函数（代理）格式
 
+        public void UpdateText(Label lab,string text)
+        {
+            try
+            {
+                if (lab.InvokeRequired)//当前线程不是创建线程
+                    lab.Invoke(new InvokeCallback(UpdateText), new object[] { lab, text });//回调
+                else//当前线程是创建线程（界面线程）
+                {
+                    if (text == null|| text.Equals(""))
+                    {
+                        lab.Visible = false;//直接更新
+                    }
                     else
                     {
-                        //if (!keyObj_Update_Pos_Ack.errcode.Equals("0"))
-                        //{
-
-                        //    lab_error.Visible = true;
-                        //    lab_error.Text =  "提示:" + keyObj_Update_Pos_Ack.errmsg;
-                        //}
-                        //else
-                        //{
-                        //    lab_error.Visible = false;
-                        //}
-                        if (!keyObj_Update_Pos_Ack.warnmsg.Equals(""))
-                        {
-
-                            lab_warning.Visible = true;
-                            lab_warning.Text = "警告:" + keyObj_Update_Pos_Ack.warnmsg;
-                        }
-                        else
-                        {
-                            lab_warning.Visible = false;
-                        }
-
+                        lab.Visible = true;
+                        lab.Text = "警告:"+text;
+                        lab.BackColor = Color.White;
+                        lab.ForeColor = Color.Red;
                     }
+
                 }
-                catch
-                { }
-                }
+            }
+            catch
+            { }
         }
+     
 
         bool cloud_thread = false;
         private void cloud_updater()
@@ -2415,11 +2396,12 @@ namespace MissionPlanner
                         {
                             if (port.BaseStream.IsOpen)
                             {
-                                keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
-                                ThreadFunction();
+                                 KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
+                               
                                 if (keyObj_Update_Pos_Ack != null)
                                 {
-
+                                   // UpdateText(lab_warning, keyObj_Update_Pos_Ack.warnmsg);
+                                    UpdateText(GCSViews.FlightData.lab_warning, keyObj_Update_Pos_Ack.warnmsg);
                                     if (port.MAV.cs.armed)
                                         switch (keyObj_Update_Pos_Ack.ctrcode)
                                         {
@@ -2445,11 +2427,8 @@ namespace MissionPlanner
                             }
                             else
                             {
-                                keyObj_Update_Pos_Ack = new KeyObj_update_pos_ack();
-                                keyObj_Update_Pos_Ack.errmsg = "";
-                                keyObj_Update_Pos_Ack.warnmsg = "";
-                                keyObj_Update_Pos_Ack.errcode = "0";
-                                ThreadFunction();
+                              //  UpdateText(lab_warning, "");
+                                UpdateText(GCSViews.FlightData.lab_warning, "");
                             }
                         }
                         catch

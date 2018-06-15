@@ -54,7 +54,6 @@ namespace MissionPlanner
             this.MenuArduPilot = new System.Windows.Forms.ToolStripButton();
             this.menu = new MissionPlanner.Controls.MyButton();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.lab_warning = new System.Windows.Forms.Label();
             this.MainMenu.SuspendLayout();
             this.CTX_mainmenu.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -251,20 +250,13 @@ namespace MissionPlanner
             this.panel1.Name = "panel1";
             this.panel1.MouseLeave += new System.EventHandler(this.MainMenu_MouseLeave);
             // 
-            // lab_warning
-            // 
-            resources.ApplyResources(this.lab_warning, "lab_warning");
-            this.lab_warning.BackColor = System.Drawing.Color.White;
-            this.lab_warning.ForeColor = System.Drawing.Color.Red;
-            this.lab_warning.Name = "lab_warning";
-            // 
             // MainV2
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             resources.ApplyResources(this, "$this");
-            this.Controls.Add(this.lab_warning);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.menu);
+            this.ForeColor = System.Drawing.Color.Black;
             this.KeyPreview = true;
             this.MainMenuStrip = this.MainMenu;
             this.Name = "MainV2";
@@ -276,7 +268,6 @@ namespace MissionPlanner
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -303,6 +294,5 @@ namespace MissionPlanner
         private System.Windows.Forms.ToolStripMenuItem connectionOptionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton MenuArduPilot;
         private System.Windows.Forms.ToolStripMenuItem connectionListToolStripMenuItem;
-        private System.Windows.Forms.Label lab_warning;
     }
 }

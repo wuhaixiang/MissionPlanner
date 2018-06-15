@@ -96,6 +96,7 @@ namespace MissionPlanner.GCSViews
         List<PointLatLng> trackPoints = new List<PointLatLng>();
 
         public static HUD myhud;
+        public static System.Windows.Forms.Label lab_warning;
         public static myGMAP mymap;
 
         bool playingLog;
@@ -186,6 +187,7 @@ namespace MissionPlanner.GCSViews
             //
             mymap = gMapControl1;
             myhud = hud1;
+            lab_warning = label7;
             MainHcopy = MainH;
 
             mymap.Paint += mymap_Paint;
