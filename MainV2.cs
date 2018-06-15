@@ -2346,6 +2346,51 @@ namespace MissionPlanner
 
             return;
         }
+        private delegate void FlushClient(); //代理
+        private static KeyObj_update_pos_ack keyObj_Update_Pos_Ack;
+        private void ThreadFunction()
+        {
+            if (this.lab_warning.InvokeRequired)//等待异步
+            {
+                FlushClient fc = new FlushClient(ThreadFunction);
+                this.Invoke(fc); //通过代理调用刷新方法
+            }
+            else
+            {
+                if (keyObj_Update_Pos_Ack == null)
+                {
+                    lab_error.Visible = true;
+                    lab_error.Text = "上报数据异常";
+                    return;
+                }
+                  
+                else
+                {
+                    if (!keyObj_Update_Pos_Ack.errcode.Equals("0"))
+                    {
+
+                        lab_error.Visible = true;
+                        lab_error.Text =  "提示:" + keyObj_Update_Pos_Ack.errmsg;
+                    }
+                    else
+                    {
+                        lab_error.Visible = false;
+                    }
+                    if (!keyObj_Update_Pos_Ack.warnmsg.Equals(""))
+                    {
+
+                        lab_warning.Visible = true;
+                        lab_warning.Text = "警告:" + keyObj_Update_Pos_Ack.warnmsg;
+                    }
+                    else
+                    {
+                        lab_warning.Visible = false;
+                    }
+                   
+                }
+            }
+        }
+
         bool cloud_thread = false;
         private void cloud_updater()
         {
@@ -2357,37 +2402,47 @@ namespace MissionPlanner
                 {
                 foreach (var port in Comports)
                 {
+               
                     //上报每个客户端的数据
                     try
                     {
-                       // if (port.CloudStream.IsOpen)
+                        if (port.BaseStream.IsOpen)
                         {
-                            KeyObj_update_pos_ack keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
+                            keyObj_Update_Pos_Ack = port.cloud_update_pos_to_cloud(Settings.Instance["service_url"], Settings.Instance["UAV_ID"]);
+                            ThreadFunction();
                             if (keyObj_Update_Pos_Ack != null)
                             {
-                                if(port.MAV.cs.armed)
-                                switch (keyObj_Update_Pos_Ack.ctrcode)
-                                {
-                                    case "0":
-                                        break;
-                                    case "1":
-                                        if (!port.MAV.cs.mode.ToLower().Equals("land"))
-                                        {
-                                            Console.WriteLine("服务器发回数据，要求降落!");
-                                           port.setMode(port.MAV.sysid, port.MAV.compid, "LAND");
-                                            CustomMessageBox.Show("提示:"+keyObj_Update_Pos_Ack .warnmsg+ "服务器发回数据，要求降落!", Strings.ERROR);
-                                        }
-                                        break;
-                                    case "2":
-                                        if (!port.MAV.cs.mode.ToLower().Equals("rtl"))
-                                        {
-                                            Console.WriteLine("服务器发回数据，要求返航!");
-                                            port.setMode(port.MAV.sysid, port.MAV.compid, "RTL");
-                                            CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求返航!", Strings.ERROR);
-                                        }
-                                        break;
-                                }
+
+                                if (port.MAV.cs.armed)
+                                    switch (keyObj_Update_Pos_Ack.ctrcode)
+                                    {
+                                        case "0":
+                                            break;
+                                        case "1":
+                                            if (!port.MAV.cs.mode.ToLower().Equals("land"))
+                                            {
+
+                                                CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求降落!", Strings.ERROR);
+                                                port.setMode(port.MAV.sysid, port.MAV.compid, "LAND");
+                                            }
+                                            break;
+                                        case "2":
+                                            if (!port.MAV.cs.mode.ToLower().Equals("rtl"))
+                                            {
+                                                CustomMessageBox.Show("提示:" + keyObj_Update_Pos_Ack.warnmsg + "服务器发回数据，要求返航!", Strings.ERROR);
+                                                port.setMode(port.MAV.sysid, port.MAV.compid, "RTL");
+                                            }
+                                            break;
+                                    }
                             }
+                        }
+                        else
+                        {
+                            keyObj_Update_Pos_Ack  =new KeyObj_update_pos_ack();
+                            keyObj_Update_Pos_Ack.errmsg = "";
+                            keyObj_Update_Pos_Ack.warnmsg = "";
+                            keyObj_Update_Pos_Ack.errcode = "0";
+                            ThreadFunction();
                         }
                     }
                     catch
@@ -2432,7 +2487,7 @@ namespace MissionPlanner
                         Thread.Sleep(1000);
                         armedstatus = MainV2.comPort.MAV.cs.armed;
                     }
-                        Thread.Sleep(2000);
+                        Thread.Sleep(3000);
                     }
             }
 
